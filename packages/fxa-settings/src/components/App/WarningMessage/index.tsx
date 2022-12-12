@@ -1,29 +1,29 @@
 import React from 'react';
 import { Localized } from '@fluent/react';
 
-type ResetPasswordWarningProps = {
-  ftlId: string;
+type WarningMessageProps = {
+  componentId: string;
   warningType: string;
   warningMessage: string;
 };
 
-const ResetPasswordWarning = ({
-  ftlId,
+const WarningMessage = ({
+  componentId,
   warningType,
   warningMessage,
-}: ResetPasswordWarningProps) => {
+}: WarningMessageProps) => {
   return (
-    <div className="my-4 text-sm" data-testid="reset-password-warning">
-      <Localized id={`${ftlId}-warning-type`}>
+    <div className="my-4 text-sm" data-testid={`${componentId}-warning`}>
+      <Localized id={`${componentId}-warning-type`}>
         <p className="inline text-red-600 font-semibold uppercase">
           {warningType}&nbsp;
         </p>
       </Localized>
-      <Localized id={`${ftlId}-warning-message`}>
+      <Localized id={`${componentId}-warning-message`}>
         <p className="inline">{warningMessage}</p>
       </Localized>
     </div>
   );
 };
 
-export default ResetPasswordWarning;
+export default WarningMessage;

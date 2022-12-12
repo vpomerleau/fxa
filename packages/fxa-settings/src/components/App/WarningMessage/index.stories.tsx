@@ -12,18 +12,16 @@ export default {
   component: ResetPasswordWarning,
 } as Meta;
 
-const mockWarningTypeId = 'pw-reset-mock-warning-type';
-const mockWarningType = 'note';
-const mockWarningMessageId = 'pw-reset-mock-warning-message';
+const mockComponentId = 'pw-reset-mock';
+const mockWarningType = 'Beware:';
 const mockWarningMessage =
   'If you eat too many cookies, you might feel very sick.';
 
 export const Default = () => (
   <AppLayout>
     <ResetPasswordWarning
-      warningTypeId={mockWarningTypeId}
+      componentId={mockComponentId}
       warningType={mockWarningType}
-      warningMessageId={mockWarningMessageId}
       warningMessage={mockWarningMessage}
     />
   </AppLayout>

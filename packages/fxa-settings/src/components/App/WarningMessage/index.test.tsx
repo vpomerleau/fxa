@@ -6,24 +6,25 @@ import 'mutationobserver-shim';
 import React from 'react';
 import '@testing-library/jest-dom/extend-expect';
 import { render, screen } from '@testing-library/react';
-import ResetPasswordWarning from '.';
+import WarningMessage from '.';
 
-const mockWarningTypeId = 'pw-reset-mock-warning-type';
-const mockWarningType = 'note';
-const mockWarningMessageId = 'pw-reset-mock-warning-message';
+const mockComponentId = 'pw-reset-mock';
+const mockWarningType = 'Note: ';
 const mockWarningMessage =
   'If you eat too many cookies, you might feel very sick.';
 
-describe('ResetPasswordWarning', () => {
+describe('WarningMessage', () => {
   it('renders as expected', async () => {
     render(
-      <ResetPasswordWarning
-        warningTypeId={mockWarningTypeId}
+      <WarningMessage
+        componentId={mockComponentId}
         warningType={mockWarningType}
-        warningMessageId={mockWarningMessageId}
         warningMessage={mockWarningMessage}
       />
     );
-    expect(screen.getByTestId('reset-password-warning')).toBeInTheDocument();
+
+    const testId: string = `${mockComponentId}-warning`;
+
+    expect(screen.getByTestId(testId)).toBeInTheDocument();
   });
 });

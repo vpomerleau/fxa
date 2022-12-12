@@ -8,7 +8,7 @@ import { usePageViewEvent } from '../../lib/metrics';
 import { Localized } from '@fluent/react';
 import InputText from '../../components/Settings/InputText';
 import HeaderContinueTo from '../../components/App/HeaderContinueTo';
-import ResetPasswordWarning from '../../components/App/ResetPasswordWarning';
+import ResetPasswordWarning from '../../components/App/WarningMessage';
 
 type AccountRecoveryConfirmKeyProps = {
   isLinkExpired?: boolean;
@@ -27,6 +27,7 @@ const AccountRecoveryConfirmKey = ({
 
   return (
     <>
+      {/* TODO: import ResetPasswordLinkExpired component once ready */}
       {/* {isLinkExpired && <ResetPasswordLinkExpired />} */}
 
       {!isLinkExpired && (
