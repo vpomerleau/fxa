@@ -80,6 +80,9 @@ export const PasswordStrengthBalloon = ({
                   href="https://support.mozilla.org/kb/password-strength"
                   data-testid="password-strength-tips-link"
                   className="link-grey"
+                  // removed this link from the focus order because it was preventing tabbing between password fields
+                  // suggest reviewing this behaviour in FXA-6881
+                  tabIndex={-1}
                 >
                   create strong passwords
                 </LinkExternal>

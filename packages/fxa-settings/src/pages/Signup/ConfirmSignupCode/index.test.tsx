@@ -44,6 +44,15 @@ function renderWithAccount(account: Account) {
   );
 }
 
+// TODO: newsletters submission checks
+// it('on success with newsletters selected', () => {
+//   renderWithLocalizationProvider(<Subject />);
+//   fillOutForm();
+//   // check newsletter boxes
+//   submit();
+//   // check
+// })
+
 describe('ConfirmSignupCode page', () => {
   // TODO: enable l10n tests when they've been updated to handle embedded tags in ftl strings
   // TODO: in FXA-6461
