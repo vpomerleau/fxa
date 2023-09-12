@@ -270,6 +270,8 @@ describe('Signup page', () => {
 
       // select all newsletters
       const checkboxes = screen.getAllByRole('checkbox');
+      // We expect three newsletter options
+      expect(checkboxes).toHaveLength(3);
       act(() => {
         newsletters.forEach((newsletter, i) => {
           fireEvent.click(checkboxes[i]);
@@ -286,11 +288,14 @@ describe('Signup page', () => {
             state: {
               email: MOCK_EMAIL,
               keyFetchToken: MOCK_KEY_FETCH_TOKEN,
-              selectedNewsletterSlugs: newsletters
-                .map((newsletter) => {
-                  return newsletter.slug;
-                })
-                .flat(),
+              // we expect three newsletter options, but 4 slugs should be passed
+              // because the first newsletter checkbox subscribes the user to 2 newsletters
+              selectedNewsletterSlugs: [
+                'security-privacy-news',
+                'mozilla-accounts',
+                'test-pilot',
+                'take-action-for-the-internet',
+              ],
               unwrapBKey: MOCK_UNWRAP_BKEY,
             },
             replace: true,
@@ -320,7 +325,7 @@ describe('Signup page', () => {
       });
 
       expect(mockNavigate).toHaveBeenCalledWith(
-        `/confirm_signup_code${location.search}`,
+        `/confirm_signup_code${mockLocation().search}`,
         {
           state: {
             email: MOCK_EMAIL,

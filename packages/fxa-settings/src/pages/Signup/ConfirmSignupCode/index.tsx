@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React, { useEffect, useState } from 'react';
-import { navigate, RouteComponentProps, useLocation } from '@reach/router';
+import { RouteComponentProps, useLocation, useNavigate } from '@reach/router';
 import {
   CLEAR_MESSAGES_TIMEOUT,
   REACT_ENTRYPOINT,
@@ -54,10 +54,10 @@ const ConfirmSignupCode = (_: RouteComponentProps) => {
     ResendStatus['not sent']
   );
 
-  const { queryParamModel, validationError } = useValidatedQueryParams(
+  const { queryParamModel } = useValidatedQueryParams(
     ConfirmSignupCodeQueryParams
   );
-
+  const navigate = useNavigate();
   const location = useLocation() as ReturnType<typeof useLocation> & {
     state: LocationState;
   };
@@ -126,12 +126,14 @@ const ConfirmSignupCode = (_: RouteComponentProps) => {
   }
 
   function alertSuccessAndGoForward() {
+    console.log('in alertSuccessAndGoForward *');
     alertBar.success(
       ftlMsgResolver.getMsg(
         'confirm-signup-code-success-alert',
         'Account confirmed successfully'
       )
     );
+    console.log('right before navigate to navigate to settings *');
     // TODO redirect elsewhere if relying party
     navigate('/settings', { replace: true });
   }

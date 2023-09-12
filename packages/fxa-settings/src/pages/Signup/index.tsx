@@ -118,16 +118,10 @@ const Signup = ({
     getValues().age === '' && setAgeCheckErrorText(localizedAgeIsRequiredError);
   };
 
-  /**
-   * TODO: form submission logic in FXA-6480
-   *       - input tooltips on failed form validation:
-   *           - 'Valid password required', 'Passwords do not match', 'You must enter your age to sign up'
-   *       - metrics events:
-   *           - flow.signup.submit/signup.submit
-   *           - flwo.signup.attempt
-   *           - flow.signup.success/signup.success/signup.signup.success (?)
-   *       - handle errors
-   **/
+  // TODO: Add metrics events to match parity with content-server in FXA-8302
+  // The legacy amplitude events will eventually be replaced by Glean,
+  // but until that is ready we must ensure the expected metrics continue to be emitted
+  // to avoid breaking dashboards.
   const onSubmit = useCallback(
     async ({ newPassword, age }: SignupFormData) => {
       if (Number(age) < 13) {
