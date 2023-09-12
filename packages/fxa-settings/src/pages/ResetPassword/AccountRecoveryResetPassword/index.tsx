@@ -228,7 +228,6 @@ const AccountRecoveryResetPassword = ({
           // no-op, don't run default
           break;
         default:
-        // TODO: run unpersistVerificationData when reliers are combined
       }
 
       alertSuccess();

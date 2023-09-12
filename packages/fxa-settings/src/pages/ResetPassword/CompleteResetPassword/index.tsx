@@ -245,7 +245,6 @@ const CompleteResetPassword = ({
             // NOTE: To fully sign in, totp must performed if 2FA is enabled.
             break;
           default:
-          // TODO: run unpersistVerificationData in FXA-7308
         }
 
         if (!isHardNavigate) {

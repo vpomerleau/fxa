@@ -11,27 +11,38 @@ const PASSWORD = 'passwordzxcv';
 test.describe('severity-1 #smoke', () => {
   test.describe('signup react', () => {
     let email;
-    test.beforeEach(async ({ pages: { login, configPage } }) => {
+
+    test.beforeEach(async ({ pages: { configPage, login } }) => {
       test.slow();
       // Ensure that the feature flag is enabled
       const config = await configPage.getConfig();
       test.skip(config.showReactApp.signUpRoutes !== true);
-
       email = login.createEmail('signup_react{id}');
     });
 
-    test.afterEach(async ({ target }) => {
-      if (email) {
-        // Cleanup any accounts created during the test
-        try {
-          await target.auth.accountDestroy(email, PASSWORD);
-        } catch (e) {
-          // Ignore errors
-        }
-      }
-    });
+  // TODO fix the cleanup function
+  // account created in previous test is polluting the test even after clearing cache and session storage
+  // clearing cache and session storage in beforeEach or at the beginning of each test does not work
+  // running accountDestroy in afterEach or at the end of each test does not work
+  // signup oauth works in isolation, but fails when running the test suite as a whole
+  // TODO: verify if test is the problem (maybe operations in unexpected order because async?)
+  // or if there is an issue with how localStorage is handled in React Signup?
+  test.afterEach(async ({ target }) => {
+    try {
+      await target.auth.accountDestroy(email, PASSWORD);
+    } catch (e) {
+      // Handle the error here
+      console.error('An error occurred during account cleanup:', e);
+      // Optionally, rethrow the error to propagate it further
+      throw e;
+    }
+  });
 
-    test('signup web', async ({ page, target, pages: { signupReact } }) => {
+    test('signup web', async ({
+    page,
+    target,
+    pages: { settings, signupReact },
+  }) => {
       await signupReact.goto();
       await signupReact.fillOutEmailFirst(email);
       await signupReact.fillOutSignupForm(PASSWORD);
@@ -44,54 +55,59 @@ test.describe('severity-1 #smoke', () => {
 
       await signupReact.fillOutCodeForm(code);
 
-      // Verify logged into settings page
-      await page.waitForURL(/settings/);
-    });
+    // Verify logged into settings page
+    await page.waitForURL(/settings/);
+    await settings.signOut();
+  });
 
-    test('signup oauth', async ({
-      target,
-      pages: { page, signupReact, relier },
-    }) => {
-      await relier.goto();
-      await relier.clickEmailFirst();
+  test('signup oauth', async ({
+    page,
+    target,
+    pages: { relier, signupReact },
+  }) => {
+    relier.goto();
+    relier.clickEmailFirst();
 
-      const { searchParams } = new URL(page.url());
-      searchParams.set('email', email);
+    // wait for navigation, and get search params
+    await page.waitForURL(/oauth\//);
+    const url = page.url();
+    const params = new URLSearchParams(url.substring(url.indexOf('?') + 1));
 
-      // We want to append the experiment params here, but also keep the original oauth params
-      await signupReact.goto('/oauth/signup', searchParams);
-      await signupReact.fillOutSignupForm(PASSWORD);
+    // reload email-first page with React experiment params
+    await signupReact.goto('/', params);
+    // fill out email first form
+    await signupReact.fillOutEmailFirst(email);
+    await signupReact.fillOutSignupForm(PASSWORD);
 
-      // TODO: This needs to be uncommented once oauth is redirecting back to relier
-      // const code = await target.email.waitForEmail(
-      //   email,
-      //   EmailType.verifyShortCode,
-      //   EmailHeader.shortCode
-      // );
+    // Get code from email
+    const code = await target.email.waitForEmail(
+      email,
+      EmailType.verifyShortCode,
+      EmailHeader.shortCode
+    );
 
-      // await signupReact.fillOutCodeForm(code);
+    await signupReact.fillOutCodeForm(code);
 
-      // Verify logged in on relier page
-      // expect(await relier.isLoggedIn()).toBe(true);
-      // await page.waitForURL(/settings/);
-    });
+    // expect to be redirected to relier after confirming signup code
+    await page.waitForURL(target.relierUrl);
+    expect(await relier.isLoggedIn()).toBe(true);
+    await relier.signOut();
+  });
 
-    /* Disabling this until FXA-8287 is fixed
-    test('signup oauth webchannel', async ({
-      page,
-      target,
-      pages: { login, relier, signupReact },
-    }) => {
-      const customEventDetail = createCustomEventDetail(
-        FirefoxCommand.FxAStatus,
-        {
-          capabilities: {
-            choose_what_to_sync: true,
-            engines: ['bookmarks', 'history'],
-          },
-          signedInUser: null,
-        }
-      );
+  test('signup oauth webchannel', async ({
+    pages: { page, login, relier, signupReact },
+    target,
+  }) => {
+    const customEventDetail = createCustomEventDetail(
+      FirefoxCommand.FxAStatus,
+      {
+        capabilities: {
+          choose_what_to_sync: true,
+          engines: ['bookmarks', 'history'],
+        },
+        signedInUser: null,
+      }
+    );
 
       await relier.goto('context=oauth_webchannel_v1&automatedBrowser=true');
       await relier.clickEmailFirst();
@@ -103,30 +119,38 @@ test.describe('severity-1 #smoke', () => {
       // expect(await login.isCWTSEngineBookmarks()).toBe(true);
       // expect(await login.isCWTSEngineHistory()).toBe(true);
 
-      const { searchParams } = new URL(page.url());
-      searchParams.set('email', email);
+    // wait for navigation, and get search params
+    await page.waitForURL(/oauth\//);
+    const url = page.url();
+    const params = new URLSearchParams(url.substring(url.indexOf('?') + 1));
 
-      // We want to append the experiment params here, but also keep the original oauth params
-      await signupReact.goto('/oauth/signup', searchParams);
-      await signupReact.fillOutSignupForm(PASSWORD);
+    // reload email-first page with React experiment params
+    await signupReact.goto('/', params);
 
-      // TODO: This needs to be implemented as well
-      // const code = await target.email.waitForEmail(
-      //   email,
-      //   EmailType.verifyShortCode,
-      //   EmailHeader.shortCode
-      // );
-      //
-      // await signupReact.fillOutCodeForm(code);
-      // await login.checkWebChannelMessage(FirefoxCommand.OAuthLogin);
-    });*/
+    await signupReact.fillOutEmailFirst(email);
+    await signupReact.fillOutSignupForm(PASSWORD);
 
-    test('signup sync', async ({ target }) => {
-      test.slow();
-      const syncBrowserPages = await newPagesForSync(target);
-      const { login, signupReact } = syncBrowserPages;
+    const code = await target.email.waitForEmail(
+      email,
+      EmailType.verifyShortCode,
+      EmailHeader.shortCode
+    );
 
-      email = login.createEmail('sync{id}');
+    await signupReact.fillOutCodeForm(code);
+
+    // TODO: CTWS has not been implemented yet
+    // await login.checkWebChannelMessage(FirefoxCommand.OAuthLogin);
+
+    // expect to be redirected to relier after confirming signup code
+    await page.waitForURL(target.relierUrl);
+    expect(await relier.isLoggedIn()).toBe(true);
+    await relier.signOut();
+  });
+
+  test('signup sync', async ({ target }) => {
+    test.slow();
+    const syncBrowserPages = await newPagesForSync(target);
+    const { signupReact } = syncBrowserPages;
 
       await signupReact.goto(
         '/',

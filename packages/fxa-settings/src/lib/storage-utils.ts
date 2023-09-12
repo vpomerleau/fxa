@@ -50,6 +50,8 @@ export interface StoredAccountData {
   sessionToken: string;
   metricsEnabled: boolean;
   verified: boolean;
+  alertText?: string;
+  displayName?: string;
 }
 
 /**
@@ -69,4 +71,21 @@ export function persistAccount(accountData: StoredAccountData) {
 export function setCurrentAccount(uid: string) {
   const storage = localStorage();
   storage.set('currentAccountUid', uid);
+}
+
+// TODO this function was added to match parity with backbone,
+// where this 'verified' property gets updated when ConfirmSignupCode is successful
+// this may not be used, and this property could be entirely from the stored local account
+export function updateStoredAccountVerificationStatus(
+  uid: hexstring,
+  verified: boolean
+) {
+  const storage = localStorage();
+  let accounts = storage.get('accounts') || {};
+
+  // update verification status of account
+  if (accounts[uid]) {
+    accounts[uid].verified = verified;
+    storage.set('accounts', accounts);
+  }
 }
