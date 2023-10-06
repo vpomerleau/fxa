@@ -11,14 +11,9 @@ import { hardNavigateToContentServer } from 'fxa-react/lib/utils';
 import { useMutation } from '@apollo/client';
 import { BeginSignupHandler, BeginSignupResponse } from './interfaces';
 import { BEGIN_SIGNUP_MUTATION } from './gql';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getCredentials } from 'fxa-auth-client/lib/crypto';
-import { GraphQLError } from 'graphql';
-import {
-  AuthUiErrorNos,
-  AuthUiErrors,
-  composeAuthUiErrorTranslationId,
-} from '../../lib/auth-errors/auth-errors';
+
 import LoadingSpinner from 'fxa-react/components/LoadingSpinner';
 
 /*
@@ -79,50 +74,29 @@ const SignupContainer = ({
 
   const [beginSignup] = useMutation<BeginSignupResponse>(BEGIN_SIGNUP_MUTATION);
 
-  const beginSignupHandler: BeginSignupHandler = useCallback(
-    async (email, password, options) => {
-      options.verificationMethod = 'email-otp';
-      options.keys = isOAuthIntegration(integration);
-      try {
-        const { authPW, unwrapBKey } = await getCredentials(email, password);
-        const { data } = await beginSignup({
-          variables: {
-            input: {
-              email,
-              authPW,
-              options,
-            },
+  const beginSignupHandler: BeginSignupHandler = async (
+    email,
+    password,
+    options
+  ) => {
+    options.verificationMethod = 'email-otp';
+    options.keys = isOAuthIntegration(integration);
+    try {
+      const { authPW, unwrapBKey } = await getCredentials(email, password);
+      const { data } = await beginSignup({
+        variables: {
+          input: {
+            email,
+            authPW,
+            options,
           },
-        });
-        return data ? { data: { ...data, unwrapBKey } } : { data: null };
-      } catch (error) {
-        const graphQLError: GraphQLError = error.graphQLErrors[0];
-        if (graphQLError && graphQLError.extensions?.errno) {
-          const { errno } = graphQLError.extensions;
-          return {
-            error: {
-              errno,
-              message: AuthUiErrorNos[errno].message,
-              ftlId: composeAuthUiErrorTranslationId({ errno }),
-            },
-          };
-        } else {
-          // TODO: why is `errno` in `AuthServerError` possibly undefined?
-          // might want to grab from `ERRORS.UNEXPECTED_ERROR` instead
-          const { errno = 999, message } = AuthUiErrors.UNEXPECTED_ERROR;
-          return {
-            data: null,
-            error: {
-              errno,
-              message,
-              ftlId: composeAuthUiErrorTranslationId({ errno }),
-            },
-          };
-        }
-      }
-    },
-    [beginSignup, integration]
-  );
+        },
+      });
+      return data ? { data: { ...data, unwrapBKey } } : { data: null };
+    } catch (error) {
+      throw error;
+    }
+  };
 
   // TODO: probably a better way to read this?
   if (window.document.cookie.indexOf('tooyoung') > -1) {

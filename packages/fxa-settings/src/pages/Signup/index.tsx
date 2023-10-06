@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from '@reach/router';
 import { useForm } from 'react-hook-form';
 import {
@@ -35,6 +35,7 @@ import {
 import { sessionToken } from '../../lib/cache';
 import GleanMetrics from '../../lib/glean';
 import { BrandMessagingPortal } from '../../components/BrandMessaging';
+import { getLocalizedErrorMessage } from '../../lib/auth-errors/auth-errors';
 
 export const viewName = 'signup';
 
@@ -128,8 +129,8 @@ const Signup = ({
   // The legacy amplitude events will eventually be replaced by Glean,
   // but until that is ready we must ensure the expected metrics continue to be emitted
   // to avoid breaking dashboards.
-  const onSubmit = useCallback(
-    async ({ newPassword, age }: SignupFormData) => {
+  const onSubmit = async ({ newPassword, age }: SignupFormData) => {
+    try {
       if (Number(age) < 13) {
         // this is a session cookie. It will go away once:
         // 1. the user closes the tab
@@ -147,7 +148,7 @@ const Signup = ({
 
       const options =
         serviceName !== MozServices.Default ? { service: serviceName } : {};
-      const { data, error } = await beginSignupHandler(
+      const { data } = await beginSignupHandler(
         queryParamModel.email,
         newPassword,
         options
@@ -193,22 +194,17 @@ const Signup = ({
           replace: true,
         });
       }
+    } catch (error) {
+      setBeginSignupLoading(false);
       if (error) {
-        const { message, ftlId } = error;
-        setBannerErrorText(ftlMsgResolver.getMsg(ftlId, message));
+        const localizedErrorMessage = getLocalizedErrorMessage(
+          ftlMsgResolver,
+          error
+        );
+        setBannerErrorText(localizedErrorMessage);
       }
-    },
-    [
-      beginSignupHandler,
-      ftlMsgResolver,
-      navigate,
-      selectedNewsletterSlugs,
-      serviceName,
-      queryParamModel.email,
-      location.search,
-      integration,
-    ]
-  );
+    }
+  };
 
   return (
     // TODO: FXA-8268, if force_auth && AuthErrors.is(error, 'DELETED_ACCOUNT'):
